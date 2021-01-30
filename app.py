@@ -1,4 +1,5 @@
 from threading import current_thread
+from tkinter.constants import DISABLED
 import PySimpleGUI as sg
 from PySimpleGUI.PySimpleGUI import Window
 
@@ -59,7 +60,7 @@ layouts =   [
                     sg.Column(select_files_layout, visible=False, key='COL2'),
                     sg.Column(employee_layout, visible=False, key='COL3')
                 ],[
-                    sg.Button('back', key='BT_BACK', visible=False), 
+                    sg.Button('back', key='BT_BACK', disabled=True), 
                     sg.Button('next', key='BT_NEXT'), 
                     sg.Exit()
                 ]
@@ -95,9 +96,9 @@ while True:
 
     if event == 'BT_NEXT':
         if current_layout == 1:
-            window['BT_BACK'].update(visible=True)
+            window['BT_BACK'].update(disabled=False)
         if current_layout+1 == max_layout:
-            window['BT_NEXT'].update(visible=False)
+            window['BT_NEXT'].update(disabled=True)
 
 
         window[f'COL{current_layout}'].update(visible=False)
