@@ -1,0 +1,13 @@
+Emp id,S.No,Main dept,Employee names,12-Dec,present,13-Dec,present.1,14-Dec,present.2,15-Dec,present.3
+1,1,MP,Naga Sanjay,3rd,,woff,P2,3rd,P3,woff,P3
+2,2,MP,Ragavendran,3rd,,woff,woff,woff,P1,3rd,P3
+3,3,MP,Nithesh,3rd,,woff,P2,3rd,P3,,P3
+4,4,MP,Nandha Kishore,woff,woff,3rd,A,woff,woff,3rd,P3
+5,5,MP,Ashwin,3rd,,woff,woff,3rd,P3,woff,P3
+6,6,MP,Romario,3rd,,woff,P2,3rd,A,woff,P3
+7,7,MP,Leela,3rd,,woff,woff,3rd,P3,woff,woff
+8,8,MP,Lekha,3rd,,woff,P2,3rd,A,woff,woff
+9,9,MP,Mirlu,3rd,,woff,woff,3rd,P3,woff,woff
+10,10,MP,Shvani,3rd,,woff,woff,3rd,A,woff,woff
+11,11,MP,Arun,woff,woff,3rd,A,woff,P3,3rd,A
+12,12,MP,Venky,woff,woff,3rd,A,woff,woff,3rd,A
