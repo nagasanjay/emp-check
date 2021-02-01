@@ -1,2 +1,0 @@
-sudo apt-get install zbar-tools
-pip3 install pyzbar opencv-python

@@ -4,6 +4,10 @@ import PySimpleGUI as sg
 from PySimpleGUI.PySimpleGUI import Column, Window
 import pandas as pd
 import csv
+import os
+
+if not os.path.exists('stats'):
+    os.makedirs('stats')
 
 '''
 sg.theme('BluePurple')
@@ -241,7 +245,7 @@ while True:
     if event == 'BT_STATS':
         C_PLANNED, C_PRESENT, C_ABSENT, empids = get_stats(shift, today, planned, date_present, _emp)
 
-        with open('{}.csv'.format(shift+'-'+today+'-'+year), 'w', newline='') as file:
+        with open('{}.csv'.format('stats\\'+shift+'-'+today+'-'+year), 'w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(['Planned', C_PLANNED])
             writer.writerow(['Present', C_PRESENT])
@@ -259,7 +263,7 @@ while True:
             else:
                 dic[ind] = 1
 
-        with open('{}.csv'.format(shift+'-'+today+'-'+year), 'a', newline='') as file:
+        with open('{}.csv'.format('stats\\'+shift+'-'+today+'-'+year), 'a', newline='') as file:
             writer = csv.writer(file)
             for item in dic.items():
                 writer.writerow([item[0], item[1]])
