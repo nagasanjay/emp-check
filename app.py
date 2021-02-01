@@ -1,7 +1,4 @@
-from threading import current_thread
-from tkinter.constants import DISABLED
 import PySimpleGUI as sg
-from PySimpleGUI.PySimpleGUI import Column, Window
 import pandas as pd
 import csv
 import os
@@ -111,7 +108,7 @@ def initialize(date, attendance_filename, employees_file, record_history, _emp):
     #record[today] = planned[date_present]
     _ = planned[date_present]
     record.join(_, on=['Emp id'])
-    print(record, planned)
+    #print(record, planned)
 
     employees = pd.read_csv(employees_file)
     employees = employees.astype({'employee ID': "string"})
@@ -128,12 +125,19 @@ _emp = ''
 
 # mark attendance
 def put_attendance(shift, attendance_filename, planned, date_present, eid, record, record_history, today):
+    #print(planned.loc[eid, date_present])
+    if planned.loc[eid, date_present] == 'P1' or planned.loc[eid, date_present] == 'P3':
+        window['EMP_DETAILS'].update('Employee Already present')
+        return False
+
     planned.loc[eid, date_present] = shift
 
     record[today] = planned[date_present]
 
     record.to_csv(record_history)
     planned.to_csv(attendance_filename)
+
+    return True
 
 window = sg.Window('Attendance', layouts, size=(640, 480), element_justification='center')
 
@@ -178,18 +182,24 @@ def get_stats(shift, today, planned, date_present, _emp):
 while True:
     event, values = window.read()
 
-    print(event, values, current_layout)
+    #print(event, values, current_layout)
 
     if init == False and current_layout == max_layout:
-        init = True
-        planned, date_present, employees, record, _emp = initialize(
-                        today, planned_file, employees_file, record_history, _emp)
+        try:
+            planned, date_present, employees, record, _emp = initialize(
+                            today, planned_file, employees_file, record_history, _emp)
+            init = True
+        except:
+            pass
     
     if current_layout == 1:
-        date = str(values['DATE'][0]) if window['DATE'] else ''
-        month = values['MONTH'][0] if window['MONTH'] else ''
-        year = str(values['YEAR'][0]) if window['YEAR'] else ''
-        shift = values['SHIFT'][0] if window['SHIFT'] else ''
+        try:
+            date = str(values['DATE'][0]) if window['DATE'] else ''
+            month = values['MONTH'][0] if window['MONTH'] else ''
+            year = str(values['YEAR'][0]) if window['YEAR'] else ''
+            shift = values['SHIFT'][0] if window['SHIFT'] else ''
+        except:
+            sg.popup('Fields missing', keep_on_top=True)
 
     if event == sg.WIN_CLOSED or event == 'Exit':
         break
@@ -210,11 +220,6 @@ while True:
         window[f'COL{current_layout}'].update(visible=False)
         current_layout -= 1
         window[f'COL{current_layout}'].update(visible=True)
-
-        if current_layout == 1:
-            window['BT_BACK'].update(visible=False)
-        if current_layout != max_layout:
-            window['BT_NEXT'].update(visible=True)
 
     if event == 'BT_PLAN':
         try:
@@ -238,34 +243,45 @@ while True:
             pass
 
     if event == 'BT_SHOW':
-        put_attendance(shift, planned_file, planned, date_present, 
-                        values['EMP_ID'], record, record_history, today)
-        display_details(employees, window, values)
+        try:
+            if put_attendance(shift, planned_file, planned, date_present, 
+                            values['EMP_ID'], record, record_history, today):
+                display_details(employees, window, values)
+            window['EMP_ID'].update('')
+        except:
+            pass
 
     if event == 'BT_STATS':
-        C_PLANNED, C_PRESENT, C_ABSENT, empids = get_stats(shift, today, planned, date_present, _emp)
+        try:
+            C_PLANNED, C_PRESENT, C_ABSENT, empids = get_stats(shift, today, planned, date_present, _emp)
 
-        with open('{}.csv'.format('stats\\'+shift+'-'+today+'-'+year), 'w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(['Planned', C_PLANNED])
-            writer.writerow(['Present', C_PRESENT])
-            writer.writerow(['Absent', C_ABSENT])
-            writer.writerow(['Absent percentage', C_ABSENT/C_PLANNED*100])
-            writer.writerow(['',''])
+            with open('{}.csv'.format('stats\\'+shift+'-'+today+'-'+year), 'w', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(['Planned', C_PLANNED])
+                writer.writerow(['Present', C_PRESENT])
+                writer.writerow(['Absent', C_ABSENT])
+                per = 0
+                if C_PLANNED != 0:
+                    per = C_ABSENT/C_PLANNED
+                
+                writer.writerow(['Absent percentage', per*100])
+                writer.writerow(['',''])
 
-        dic = {}
+            dic = {}
 
-        for id in empids:
-            ind = employees.loc[id, 'task']
-            print(ind)
-            if ind in dic.keys():
-                dic[ind] += 1
-            else:
-                dic[ind] = 1
+            for id in empids:
+                ind = employees.loc[id, 'task']
+                #print(ind)
+                if ind in dic.keys():
+                    dic[ind] += 1
+                else:
+                    dic[ind] = 1
 
-        with open('{}.csv'.format('stats\\'+shift+'-'+today+'-'+year), 'a', newline='') as file:
-            writer = csv.writer(file)
-            for item in dic.items():
-                writer.writerow([item[0], item[1]])
+            with open('{}.csv'.format('stats\\'+shift+'-'+today+'-'+year), 'a', newline='') as file:
+                writer = csv.writer(file)
+                for item in dic.items():
+                    writer.writerow([item[0], item[1]])
+        except:
+            pass
 
 window.close()
