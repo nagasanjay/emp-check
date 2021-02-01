@@ -3,6 +3,7 @@ from tkinter.constants import DISABLED
 import PySimpleGUI as sg
 from PySimpleGUI.PySimpleGUI import Column, Window
 import pandas as pd
+import csv
 
 '''
 sg.theme('BluePurple')
@@ -88,9 +89,11 @@ record_history = ''
 
 # ------ backend functions -------
 # initialize the local db
-def initialize(date, attendance_filename, employees_file, record_history):
+def initialize(date, attendance_filename, employees_file, record_history, _emp):
     planned = pd.read_csv(attendance_filename)
     planned = planned.astype({'Emp id': 'string'})
+
+    _emp = planned['Emp id']
     #planned['index'] = planned['Emp id']
     planned.set_index("Emp id", inplace=True)
     date_present = planned.columns.get_loc(date)+1
@@ -110,13 +113,14 @@ def initialize(date, attendance_filename, employees_file, record_history):
     employees = employees.astype({'employee ID': "string"})
     employees.set_index("employee ID", inplace=True)
 
-    return planned,date_present, employees, record
+    return planned,date_present, employees, record, _emp
 
 init = False
 planned = ''
 date_present = ''
 employees = ''
 record = ''
+_emp = ''
 
 # mark attendance
 def put_attendance(shift, attendance_filename, planned, date_present, eid, record, record_history, today):
@@ -135,12 +139,14 @@ def display_details(employees, window, values):
     window['EMP_DETAILS'].update(details['employee name']+'\n'+details['task'])
     
 
-def get_stats(shift, today, planned, date_present):
+def get_stats(shift, today, planned, date_present, _emp):
     _planned = planned[today]
     _present = planned[date_present]
     C_PLANNED = 0
     C_PRESENT = 0
     C_ABSENT = 0
+    empids = []
+
     _shift = '1st' if shift == 'P1' else '3rd'
 
     '''
@@ -161,8 +167,9 @@ def get_stats(shift, today, planned, date_present):
                 C_ABSENT += 1
         if _present[i] == shift:
             C_PRESENT += 1
+            empids.append(_emp[i])
 
-    return C_PLANNED, C_PRESENT, C_ABSENT
+    return C_PLANNED, C_PRESENT, C_ABSENT, empids
 
 while True:
     event, values = window.read()
@@ -171,8 +178,8 @@ while True:
 
     if init == False and current_layout == max_layout:
         init = True
-        planned, date_present, employees, record = initialize(
-                        today, planned_file, employees_file, record_history)
+        planned, date_present, employees, record, _emp = initialize(
+                        today, planned_file, employees_file, record_history, _emp)
     
     if current_layout == 1:
         date = str(values['DATE'][0]) if window['DATE'] else ''
@@ -232,10 +239,29 @@ while True:
         display_details(employees, window, values)
 
     if event == 'BT_STATS':
-        C_PLANNED, C_PRESENT, C_ABSENT = get_stats(shift, today, planned, date_present)
+        C_PLANNED, C_PRESENT, C_ABSENT, empids = get_stats(shift, today, planned, date_present, _emp)
 
-        sg.Popup('Planned : {}\nPresent : {}\nAbsent : {}\nAbsent Percentage : {}%'
-                .format(C_PLANNED, C_PRESENT, C_ABSENT, C_ABSENT/C_PLANNED*100), keep_on_top=True)
+        with open('{}.csv'.format(shift+'-'+today+'-'+year), 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(['Planned', C_PLANNED])
+            writer.writerow(['Present', C_PRESENT])
+            writer.writerow(['Absent', C_ABSENT])
+            writer.writerow(['Absent percentage', C_ABSENT/C_PLANNED*100])
+            writer.writerow(['',''])
 
+        dic = {}
+
+        for id in empids:
+            ind = employees.loc[id, 'task']
+            print(ind)
+            if ind in dic.keys():
+                dic[ind] += 1
+            else:
+                dic[ind] = 1
+
+        with open('{}.csv'.format(shift+'-'+today+'-'+year), 'a', newline='') as file:
+            writer = csv.writer(file)
+            for item in dic.items():
+                writer.writerow([item[0], item[1]])
 
 window.close()
