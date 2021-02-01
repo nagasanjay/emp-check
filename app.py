@@ -1,7 +1,11 @@
+from threading import current_thread
+from tkinter.constants import DISABLED
 import PySimpleGUI as sg
+from PySimpleGUI.PySimpleGUI import Column, Window
 import pandas as pd
 import csv
 import os
+import sys
 
 if not os.path.exists('stats'):
     os.makedirs('stats')
@@ -190,7 +194,7 @@ while True:
                             today, planned_file, employees_file, record_history, _emp)
             init = True
         except:
-            pass
+            print(sys.exc_info())
     
     if current_layout == 1:
         try:
@@ -249,7 +253,7 @@ while True:
                 display_details(employees, window, values)
             window['EMP_ID'].update('')
         except:
-            pass
+            print('show failed')
 
     if event == 'BT_STATS':
         try:
